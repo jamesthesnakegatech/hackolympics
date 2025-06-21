@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
+import ChatWidget from '@/components/ChatWidget'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -44,6 +45,7 @@ export default function RootLayout({
         <main className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-orange-50">
           {children}
         </main>
+        <ChatWidget />
       </body>
     </html>
   )
