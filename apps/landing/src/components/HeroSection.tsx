@@ -2,33 +2,9 @@
 
 import { motion } from 'framer-motion'
 import { ChevronRight, Badge, Users, MapPin } from 'lucide-react'
-import { useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 
-interface HeroSectionProps {
-  onEarlyAccess: (email: string) => Promise<void>
-  isLoading: boolean
-}
-
-export function HeroSection({ onEarlyAccess, isLoading }: HeroSectionProps) {
-  // Setup - hooks and state
-  const [email, setEmail] = useState('')
-  const [submitted, setSubmitted] = useState(false)
-
-  // Logic - process data
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!email) return
-    
-    await onEarlyAccess(email)
-    setSubmitted(true)
-    setEmail('')
-  }
-
-  // Guard clauses - none needed for this component
-
-  // Markup - hero section UI
+export function HeroSection() {
   return (
     <section className="pt-24 pb-20 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
@@ -38,7 +14,7 @@ export function HeroSection({ onEarlyAccess, isLoading }: HeroSectionProps) {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="inline-flex items-center px-4 py-2 rounded-full bg-primary-50 text-primary-700 text-sm font-medium mb-8"
+            className="inline-flex items-center px-4 py-2 rounded-full bg-gradient-to-r from-purple-100 to-pink-100 text-purple-700 text-sm font-medium mb-8"
           >
             <MapPin className="w-4 h-4 mr-2" />
             San Francisco Hacker Houses
@@ -78,19 +54,19 @@ export function HeroSection({ onEarlyAccess, isLoading }: HeroSectionProps) {
           >
             <div className="flex items-center space-x-2 text-gray-600">
               <MapPin className="w-5 h-5" />
-              <span>15+ Active Houses</span>
+              <span>5+ Active Houses</span>
             </div>
             <div className="flex items-center space-x-2 text-gray-600">
               <Users className="w-5 h-5" />
-              <span>200+ Community Members</span>
+              <span>50+ Community Members</span>
             </div>
             <div className="flex items-center space-x-2 text-gray-600">
               <Badge className="w-5 h-5" />
-              <span>5+ SF Neighborhoods</span>
+              <span>5 SF Neighborhoods</span>
             </div>
           </motion.div>
 
-          {/* Email signup */}
+          {/* Action buttons */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -127,7 +103,7 @@ export function HeroSection({ onEarlyAccess, isLoading }: HeroSectionProps) {
             transition={{ delay: 0.6 }}
             className="text-sm text-gray-500 mt-4"
           >
-            Connect with builders from SOMA, Mission, Castro, and beyond
+            Connect with builders from SOMA, Mission, Castro, Marina, and Pacific Heights
           </motion.p>
         </div>
       </div>

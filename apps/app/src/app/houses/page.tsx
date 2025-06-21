@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Loader2, Home, Users, MapPin, ExternalLink, Calendar, Star, Wifi, Coffee } from 'lucide-react';
 import Link from 'next/link';
+import { PageLayout } from '@/components/ui/page-layout';
 
 interface ExternalHouse {
   [key: string]: any; // Since it's flat JSON, we'll handle any structure
@@ -112,49 +113,38 @@ export default function HousesPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-8">
-        <div className="max-w-6xl mx-auto flex items-center justify-center h-64">
-          <Loader2 className="h-8 w-8 animate-spin text-white" />
-          <span className="ml-2 text-white">Loading houses...</span>
+      <PageLayout title="SF Hacker Houses" subtitle="Discover collaborative living spaces for builders, makers, and innovators in San Francisco">
+        <div className="flex items-center justify-center h-64">
+          <Loader2 className="h-8 w-8 animate-spin text-purple-600" />
+          <span className="ml-2 text-gray-600">Loading houses...</span>
         </div>
-      </div>
+      </PageLayout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-8">
-      <div className="max-w-6xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center gap-3 mb-4">
-            <Home className="h-8 w-8 text-purple-400" />
-            <h1 className="text-4xl font-bold text-white">SF Hacker Houses</h1>
-          </div>
-          <p className="text-gray-300 text-lg">
-            Discover collaborative living spaces for builders, makers, and innovators in San Francisco
-          </p>
-        </div>
+    <PageLayout title="SF Hacker Houses" subtitle="Discover collaborative living spaces for builders, makers, and innovators in San Francisco">
 
         {/* Filter Buttons */}
         <div className="flex gap-3 mb-8">
           <Button
             variant={filter === 'all' ? 'default' : 'outline'}
             onClick={() => setFilter('all')}
-            className={filter === 'all' ? 'bg-purple-600 hover:bg-purple-700' : 'border-gray-600 text-gray-300 hover:bg-white/10'}
+            className={filter === 'all' ? 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white' : 'border-gray-300 text-gray-600 hover:bg-purple-50'}
           >
             All Houses ({allHouses.length})
           </Button>
           <Button
             variant={filter === 'local' ? 'default' : 'outline'}
             onClick={() => setFilter('local')}
-            className={filter === 'local' ? 'bg-purple-600 hover:bg-purple-700' : 'border-gray-600 text-gray-300 hover:bg-white/10'}
+            className={filter === 'local' ? 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white' : 'border-gray-300 text-gray-600 hover:bg-purple-50'}
           >
             Verified Houses ({sampleHouses.length})
           </Button>
           <Button
             variant={filter === 'external' ? 'default' : 'outline'}
             onClick={() => setFilter('external')}
-            className={filter === 'external' ? 'bg-purple-600 hover:bg-purple-700' : 'border-gray-600 text-gray-300 hover:bg-white/10'}
+            className={filter === 'external' ? 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white' : 'border-gray-300 text-gray-600 hover:bg-purple-50'}
           >
             Community Houses ({externalHouses.length})
           </Button>
@@ -162,50 +152,70 @@ export default function HousesPage() {
 
         {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <Card className="bg-white/10 backdrop-blur-sm border-gray-700">
+          <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm">
             <CardContent className="p-6">
-              <div className="text-center">
-                <div className="text-3xl font-bold text-purple-400">{allHouses.length}</div>
-                <div className="text-gray-300">Total Houses</div>
+              <div className="flex items-center space-x-3">
+                <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center">
+                  <Home className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <p className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">{allHouses.length}</p>
+                  <p className="text-gray-600 font-medium">Total Houses</p>
+                </div>
               </div>
             </CardContent>
           </Card>
-          <Card className="bg-white/10 backdrop-blur-sm border-gray-700">
+          <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm">
             <CardContent className="p-6">
-              <div className="text-center">
-                <div className="text-3xl font-bold text-blue-400">
-                  {allHouses.reduce((acc, house) => acc + (getProperty(house, 'memberCount', 'members', 'capacity') || 0), 0)}
+              <div className="flex items-center space-x-3">
+                <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-500 rounded-2xl flex items-center justify-center">
+                  <Users className="w-6 h-6 text-white" />
                 </div>
-                <div className="text-gray-300">Total Members</div>
+                <div>
+                  <p className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                    {allHouses.reduce((acc, house) => acc + (getProperty(house, 'memberCount', 'members', 'capacity') || 0), 0)}
+                  </p>
+                  <p className="text-gray-600 font-medium">Total Members</p>
+                </div>
               </div>
             </CardContent>
           </Card>
-          <Card className="bg-white/10 backdrop-blur-sm border-gray-700">
+          <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm">
             <CardContent className="p-6">
-              <div className="text-center">
-                <div className="text-3xl font-bold text-green-400">
-                  {new Set(allHouses.map(h => getProperty(h, 'neighborhood', 'location', 'area') || 'SF')).size}
+              <div className="flex items-center space-x-3">
+                <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-blue-500 rounded-2xl flex items-center justify-center">
+                  <MapPin className="w-6 h-6 text-white" />
                 </div>
-                <div className="text-gray-300">Neighborhoods</div>
+                <div>
+                  <p className="text-3xl font-bold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent">
+                    {new Set(allHouses.map(h => getProperty(h, 'neighborhood', 'location', 'area') || 'SF')).size}
+                  </p>
+                  <p className="text-gray-600 font-medium">Neighborhoods</p>
+                </div>
               </div>
             </CardContent>
           </Card>
-          <Card className="bg-white/10 backdrop-blur-sm border-gray-700">
+          <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm">
             <CardContent className="p-6">
-              <div className="text-center">
-                <div className="text-3xl font-bold text-orange-400">
-                  {new Set(allHouses.flatMap(h => getProperty(h, 'focusAreas', 'focus', 'specialties') || [])).size}
+              <div className="flex items-center space-x-3">
+                <div className="w-12 h-12 bg-gradient-to-r from-orange-500 to-pink-500 rounded-2xl flex items-center justify-center">
+                  <Star className="w-6 h-6 text-white" />
                 </div>
-                <div className="text-gray-300">Focus Areas</div>
+                <div>
+                  <p className="text-3xl font-bold bg-gradient-to-r from-orange-600 to-pink-600 bg-clip-text text-transparent">
+                    {new Set(allHouses.flatMap(h => getProperty(h, 'focusAreas', 'focus', 'specialties') || [])).size}
+                  </p>
+                  <p className="text-gray-600 font-medium">Focus Areas</p>
+                </div>
               </div>
             </CardContent>
           </Card>
         </div>
 
         {error && (
-          <Card className="bg-red-900/20 border-red-500 mb-6">
+          <Card className="bg-red-50 border-red-200 mb-6">
             <CardContent className="p-6">
-              <p className="text-red-300">Warning: {error}</p>
+              <p className="text-red-600">Warning: {error}</p>
             </CardContent>
           </Card>
         )}
@@ -213,31 +223,31 @@ export default function HousesPage() {
         {/* Houses Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredHouses.map((house, index) => (
-            <Card key={house.id || index} className="bg-white/10 backdrop-blur-sm border-gray-700 hover:bg-white/15 transition-all duration-300">
+            <Card key={house.id || index} className="border-0 shadow-lg bg-white/90 backdrop-blur-sm hover:shadow-xl transition-all duration-300 hover:scale-105">
               <CardHeader>
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-2">
-                      <CardTitle className="text-white text-xl">
+                      <CardTitle className="text-gray-900 text-xl">
                         {getProperty(house, 'name', 'title', 'houseName') || `House ${index + 1}`}
                       </CardTitle>
                       {house.type === 'external' && (
-                        <Badge variant="secondary" className="bg-blue-500/20 text-blue-300 text-xs">
+                        <Badge className="bg-gradient-to-r from-blue-100 to-purple-100 text-blue-700 border-blue-200 text-xs">
                           Community
                         </Badge>
                       )}
                       {house.type === 'local' && (
-                        <Badge variant="secondary" className="bg-green-500/20 text-green-300 text-xs">
+                        <Badge className="bg-gradient-to-r from-green-100 to-blue-100 text-green-700 border-green-200 text-xs">
                           Verified
                         </Badge>
                       )}
                     </div>
-                    <CardDescription className="text-gray-300">
+                    <CardDescription className="text-gray-600">
                       {getProperty(house, 'neighborhood', 'location', 'area') || 'San Francisco'}
                     </CardDescription>
                   </div>
                   {getProperty(house, 'verified', 'featured', 'premium') && (
-                    <Star className="h-5 w-5 text-yellow-400 flex-shrink-0" />
+                    <Star className="h-5 w-5 text-yellow-500 flex-shrink-0" />
                   )}
                 </div>
               </CardHeader>
@@ -251,7 +261,7 @@ export default function HousesPage() {
                     />
                   )}
                   
-                  <p className="text-gray-300 text-sm">
+                  <p className="text-gray-600 text-sm">
                     {(() => {
                       const description = getProperty(house, 'description');
                       return description 
@@ -260,14 +270,14 @@ export default function HousesPage() {
                     })()}
                   </p>
                   
-                  <div className="flex items-center justify-between text-sm text-gray-400">
+                  <div className="flex items-center justify-between text-sm text-gray-600">
                     <div className="flex items-center gap-2">
-                      <Users className="h-4 w-4" />
+                      <Users className="h-4 w-4 text-purple-500" />
                       <span>{getProperty(house, 'memberCount', 'members', 'capacity') || 'N/A'} members</span>
                     </div>
                     {getProperty(house, 'address', 'location') && (
                       <div className="flex items-center gap-1">
-                        <MapPin className="h-3 w-3" />
+                        <MapPin className="h-3 w-3 text-blue-500" />
                         <span>{getProperty(house, 'neighborhood', 'area') || 'SF'}</span>
                       </div>
                     )}
@@ -279,12 +289,12 @@ export default function HousesPage() {
                       {(getProperty(house, 'focusAreas', 'focus', 'specialties') || [])
                         .slice(0, 3)
                         .map((area: string, i: number) => (
-                          <Badge key={i} variant="outline" className="text-xs bg-purple-500/20 text-purple-300">
+                          <Badge key={i} className="text-xs bg-gradient-to-r from-purple-100 to-pink-100 text-purple-700 border-purple-200">
                             {area}
                           </Badge>
                         ))}
                       {(getProperty(house, 'focusAreas', 'focus', 'specialties') || []).length > 3 && (
-                        <Badge variant="outline" className="text-xs bg-gray-500/20 text-gray-400">
+                        <Badge className="text-xs bg-gradient-to-r from-gray-100 to-gray-200 text-gray-600 border-gray-300">
                           +{(getProperty(house, 'focusAreas', 'focus', 'specialties') || []).length - 3}
                         </Badge>
                       )}
@@ -295,10 +305,10 @@ export default function HousesPage() {
                   {getProperty(house, 'amenities') && (
                     <div className="flex flex-wrap gap-2">
                       {(getProperty(house, 'amenities') || []).slice(0, 2).map((amenity: string, i: number) => (
-                        <div key={i} className="flex items-center gap-1 text-xs text-gray-400">
-                          {amenity.includes('Internet') || amenity.includes('Wifi') ? <Wifi className="h-3 w-3" /> : 
-                           amenity.includes('Coffee') || amenity.includes('Kitchen') ? <Coffee className="h-3 w-3" /> : 
-                           <Home className="h-3 w-3" />}
+                        <div key={i} className="flex items-center gap-1 text-xs text-gray-600">
+                          {amenity.includes('Internet') || amenity.includes('Wifi') ? <Wifi className="h-3 w-3 text-green-500" /> : 
+                           amenity.includes('Coffee') || amenity.includes('Kitchen') ? <Coffee className="h-3 w-3 text-orange-500" /> : 
+                           <Home className="h-3 w-3 text-blue-500" />}
                           <span>{amenity}</span>
                         </div>
                       ))}
@@ -309,12 +319,12 @@ export default function HousesPage() {
                   <div className="flex gap-2 pt-2">
                     {house.type === 'local' ? (
                       <Link href={`/house/${house.id}`} className="flex-1">
-                        <Button className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700">
+                        <Button className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white">
                           View Details
                         </Button>
                       </Link>
                     ) : (
-                      <Button variant="outline" className="flex-1 border-gray-600 text-gray-300 hover:bg-white/10">
+                      <Button variant="outline" className="flex-1 border-gray-300 text-gray-600 hover:bg-purple-50">
                         Contact
                       </Button>
                     )}
@@ -323,7 +333,7 @@ export default function HousesPage() {
                       <Button 
                         variant="outline" 
                         size="sm"
-                        className="border-gray-600 text-gray-300 hover:bg-white/10"
+                        className="border-gray-300 text-gray-600 hover:bg-purple-50"
                         onClick={() => window.open(getProperty(house, 'website', 'url', 'link'), '_blank')}
                       >
                         <ExternalLink className="h-4 w-4" />
@@ -337,11 +347,11 @@ export default function HousesPage() {
         </div>
 
         {filteredHouses.length === 0 && (
-          <Card className="bg-white/10 backdrop-blur-sm border-gray-700">
+          <Card className="bg-white/80 backdrop-blur-sm border-gray-200 col-span-full">
             <CardContent className="p-12 text-center">
-              <Home className="h-16 w-16 text-gray-500 mx-auto mb-4" />
-              <h3 className="text-white text-xl font-semibold mb-2">No Houses Found</h3>
-              <p className="text-gray-400">No houses match your current filter criteria.</p>
+              <Home className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-gray-900 text-xl font-semibold mb-2">No Houses Found</h3>
+              <p className="text-gray-600">No houses match your current filter criteria.</p>
             </CardContent>
           </Card>
         )}
@@ -349,12 +359,11 @@ export default function HousesPage() {
         {/* Back to Dashboard */}
         <div className="mt-8 text-center">
           <Link href="/dashboard">
-            <Button variant="outline" className="border-gray-600 text-gray-300 hover:bg-white/10">
+            <Button variant="outline" className="border-gray-300 text-gray-600 hover:bg-purple-50">
               ← Back to Dashboard
             </Button>
           </Link>
         </div>
-      </div>
-    </div>
+    </PageLayout>
   );
 } 
