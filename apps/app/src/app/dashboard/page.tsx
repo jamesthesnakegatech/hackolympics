@@ -451,6 +451,67 @@ export default function DashboardPage() {
           </Card>
         </div>
 
+        {/* Community Explorer */}
+        <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-sm mb-8">
+          <CardHeader>
+            <CardTitle className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+              🌟 Explore SF Tech Community
+            </CardTitle>
+            <p className="text-gray-600">Discover founders, projects, houses, and achievements from the SF hackathon ecosystem</p>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <Link href="/founders">
+                <Card className="cursor-pointer hover:shadow-lg transition-all duration-300 hover:scale-105 bg-gradient-to-br from-blue-50 to-purple-50 border-blue-200">
+                  <CardContent className="p-6 text-center">
+                    <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center mx-auto mb-3">
+                      <Users className="w-6 h-6 text-white" />
+                    </div>
+                    <h3 className="font-bold text-gray-900 mb-2">Founders</h3>
+                    <p className="text-sm text-gray-600">Meet brilliant founders building the future</p>
+                  </CardContent>
+                </Card>
+              </Link>
+
+              <Link href="/projects">
+                <Card className="cursor-pointer hover:shadow-lg transition-all duration-300 hover:scale-105 bg-gradient-to-br from-purple-50 to-pink-50 border-purple-200">
+                  <CardContent className="p-6 text-center">
+                    <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-600 rounded-xl flex items-center justify-center mx-auto mb-3">
+                      <Badge className="w-6 h-6 text-white" />
+                    </div>
+                    <h3 className="font-bold text-gray-900 mb-2">Projects</h3>
+                    <p className="text-sm text-gray-600">Innovative hackathon projects and demos</p>
+                  </CardContent>
+                </Card>
+              </Link>
+
+              <Link href="/houses">
+                <Card className="cursor-pointer hover:shadow-lg transition-all duration-300 hover:scale-105 bg-gradient-to-br from-green-50 to-blue-50 border-green-200">
+                  <CardContent className="p-6 text-center">
+                    <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-blue-600 rounded-xl flex items-center justify-center mx-auto mb-3">
+                      <Home className="w-6 h-6 text-white" />
+                    </div>
+                    <h3 className="font-bold text-gray-900 mb-2">All Houses</h3>
+                    <p className="text-sm text-gray-600">Comprehensive house directory</p>
+                  </CardContent>
+                </Card>
+              </Link>
+
+              <Link href="/external-badges">
+                <Card className="cursor-pointer hover:shadow-lg transition-all duration-300 hover:scale-105 bg-gradient-to-br from-yellow-50 to-orange-50 border-yellow-200">
+                  <CardContent className="p-6 text-center">
+                    <div className="w-12 h-12 bg-gradient-to-r from-yellow-500 to-orange-600 rounded-xl flex items-center justify-center mx-auto mb-3">
+                      <Badge className="w-6 h-6 text-white" />
+                    </div>
+                    <h3 className="font-bold text-gray-900 mb-2">Community Badges</h3>
+                    <p className="text-sm text-gray-600">Achievement badges from events</p>
+                  </CardContent>
+                </Card>
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* View Toggle */}
         <div className="flex justify-center mb-8">
           <div className="bg-white/80 backdrop-blur-sm rounded-xl p-1 shadow-lg border border-gray-200">
