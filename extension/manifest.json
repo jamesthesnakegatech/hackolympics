@@ -2,19 +2,26 @@
   "manifest_version": 3,
   "name": "Partiful Helper",
   "description": "Export guest lists and display achievement badges on profiles",
-  "version": "2.0",
-  "permissions": ["storage", "webRequest"],
-  "host_permissions": ["*://*.partiful.com/*"],
+  "version": "2.1",
+  "permissions": ["storage", "webRequest", "clipboardWrite"],
+  "host_permissions": [
+    "*://*.partiful.com/*",
+    "http://localhost:3001/*"
+  ],
   "web_accessible_resources": [
     {
       "resources": [
         "badges/party_plus_badge.png",
         "badges/bbq.png",
         "badges/mission_control_badge.png",
-        "badges/hack_olympics_badge.png"
+        "badges/hack_olympics_badge.png",
+        "badges/birthday.png",
+        "Partiful_Guest_Badges.csv"
       ],
       "matches": [
-        "<all_urls>"
+        "https://partiful.com/*",
+        "https://*.partiful.com/*",
+        "http://localhost:3001/*"
       ]
     }
   ],
@@ -25,7 +32,8 @@
     {
       "matches": [
         "https://partiful.com/*",
-        "https://*.partiful.com/*"
+        "https://*.partiful.com/*",
+        "http://localhost:3001/*"
       ],
       "js": [
         "content.js"
