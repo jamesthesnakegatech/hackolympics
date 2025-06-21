@@ -1,0 +1,23 @@
+{
+  "name": "hackolympics",
+  "private": true,
+  "scripts": {
+    "build": "turbo build",
+    "dev": "turbo dev",
+    "lint": "turbo lint",
+    "format": "turbo format",
+    "clean": "turbo clean",
+    "type-check": "turbo type-check"
+  },
+  "devDependencies": {
+    "@turbo/gen": "^1.12.4",
+    "turbo": "^1.12.4",
+    "prettier": "^3.2.5",
+    "typescript": "^5.4.0"
+  },
+
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ]
+} 

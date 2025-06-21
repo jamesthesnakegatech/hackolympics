@@ -1,0 +1,229 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  bio           String?
+  location      String?
+  website       String?
+  twitter       String?
+  github        String?
+  linkedin      String?
+  partiful      String?   // Partiful profile URL
+  luma          String?   // Luma profile URL
+  jobTitle      String?
+  company       String?
+  skills        String[]  // Array of skills/interests
+  isPublic      Boolean   @default(true)  // Whether profile is visible in directory
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  accounts         Account[]
+  sessions         Session[]
+  userBadges       UserBadge[]
+  eventAttendees   EventAttendee[]
+  eventsCreated    Event[] @relation("EventCreator")
+  hackerHouseMembers HackerHouseMember[]
+  badgesCreated    Badge[] @relation("BadgeCreator")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Badge {
+  id          String     @id @default(cuid())
+  name        String
+  description String
+  emoji       String
+  category    BadgeCategory
+  rarity      BadgeRarity
+  imageUrl    String?
+  criteria    String     // JSON string with badge earning criteria
+  externalEventUrl String? // URL to external event (Luma/Partiful)
+  externalPlatform String? // 'luma' | 'partiful' | null
+  createdBy   String?    // User ID who created the badge
+  isActive    Boolean    @default(true)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  userBadges  UserBadge[]
+  eventBadges EventBadge[]
+  creator     User?      @relation("BadgeCreator", fields: [createdBy], references: [id])
+}
+
+model UserBadge {
+  id        String   @id @default(cuid())
+  userId    String
+  badgeId   String
+  earnedAt  DateTime @default(now())
+  eventId   String?  // Optional: badge earned from a specific event
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  badge Badge @relation(fields: [badgeId], references: [id], onDelete: Cascade)
+  event Event? @relation(fields: [eventId], references: [id])
+
+  @@unique([userId, badgeId])
+}
+
+model Event {
+  id          String    @id @default(cuid())
+  title       String
+  description String?
+  location    String?
+  startTime   DateTime
+  endTime     DateTime?
+  imageUrl    String?
+  externalId  String?   // For Airtable integration
+  venue       String?
+  maxAttendees Int?
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  createdBy   String
+  hackerHouseId String? // Optional: event hosted by a hacker house
+
+  creator       User            @relation("EventCreator", fields: [createdBy], references: [id])
+  hackerHouse   HackerHouse?    @relation(fields: [hackerHouseId], references: [id])
+  attendees     EventAttendee[]
+  eventBadges   EventBadge[]
+  userBadges    UserBadge[]
+}
+
+model EventAttendee {
+  id         String   @id @default(cuid())
+  userId     String
+  eventId    String
+  attendedAt DateTime @default(now())
+  status     AttendeeStatus @default(REGISTERED)
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, eventId])
+}
+
+model EventBadge {
+  id      String @id @default(cuid())
+  eventId String
+  badgeId String
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  badge Badge @relation(fields: [badgeId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, badgeId])
+}
+
+model HackerHouse {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  location    String
+  address     String?
+  neighborhood String? // e.g., "SOMA", "Mission", "Castro"
+  website     String?
+  instagram   String?
+  twitter     String?
+  imageUrl    String?
+  coverImageUrl String?
+  maxResidents Int?
+  amenities   String[] // e.g., ["WiFi", "Kitchen", "Coworking Space"]
+  focusAreas  String[] // e.g., ["AI/ML", "Web3", "Hardware"]
+  isActive    Boolean  @default(true)
+  isVerified  Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  members     HackerHouseMember[]
+  events      Event[]
+}
+
+model HackerHouseMember {
+  id            String   @id @default(cuid())
+  userId        String
+  hackerHouseId String
+  role          HouseMemberRole @default(RESIDENT)
+  startDate     DateTime @default(now())
+  endDate       DateTime?
+  isActive      Boolean  @default(true)
+  isPublic      Boolean  @default(true)  // Whether membership is visible in directory
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  hackerHouse  HackerHouse  @relation(fields: [hackerHouseId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, hackerHouseId])
+}
+
+enum BadgeCategory {
+  EVENT
+  HACKATHON
+  COMMUNITY
+  ACHIEVEMENT
+}
+
+enum BadgeRarity {
+  COMMON
+  RARE
+  EPIC
+  LEGENDARY
+}
+
+enum AttendeeStatus {
+  REGISTERED
+  ATTENDED
+  NO_SHOW
+}
+
+enum HouseMemberRole {
+  FOUNDER
+  RESIDENT
+  ALUMNI
+  GUEST
+  VISITOR
+} 

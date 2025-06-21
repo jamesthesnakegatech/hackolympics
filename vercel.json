@@ -1,0 +1,18 @@
+{
+  "buildCommand": "turbo build --filter=@hackolympics/landing",
+  "outputDirectory": "apps/landing/.next",
+  "framework": "nextjs",
+  "installCommand": "npm install",
+  "builds": [
+    {
+      "src": "apps/landing/package.json",
+      "use": "@vercel/next"  
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/app/(.*)",
+      "destination": "https://hackolympics-app.vercel.app/$1"
+    }
+  ]
+} 

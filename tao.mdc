@@ -1,0 +1,1324 @@
+Useful for underestanding how to actually write typescript react components well.
+
+2. Components
+2.1. Write Deep Components
+John Ousterhout’s concept of a deep module—a unit that hides complexity behind a simple interface—applies well to React components. Deep components offer meaningful abstraction: they handle complex logic internally while exposing a clean, minimal API.
+
+A shallow component, like a button with a dozen props for every possible state, exposes all its internals without reducing complexity. It’s flexible, but not valuable—it simply shifts the burden to the user.
+
+Shallow components often arise from trying to make one component do too much. Instead, favor smaller, purpose-built components with sensible defaults and focused props. For example:
+
+jsx
+Copy
+Edit
+<IconButton
+  icon={<UserIcon />}
+  onClick={() => {}}
+  state="loading"
+>
+  Submit
+</IconButton>
+Here, the button manages loading, error, and success states internally. The result is a simpler, more powerful interface. The best components are deep: they do more with less.
+2.2. Naming Components
+Naming is hard, but React makes it easier—components are visual, so their names can reflect what users see. The challenge is balancing generic names with overly specific ones.
+
+Generic components (e.g., Button, Input) are simple to name. Domain-specific ones should convey context. A vague name like Widget tells you little, while LivePaymentsWidget is clear and informative. Similarly, Form is ambiguous; UserDetailsForm clarifies its purpose.
+
+Using module structure helps, but relying solely on it can cause confusion—especially when similar components exist across modules. To avoid this, prefix names with context when clarity is lacking.
+
+Longer names might seem verbose, but the trade-off is worthwhile: clarity beats brevity when navigating and maintaining a codebase.
+2.3. Structure Component Files
+For years, I followed the habit of placing all helper functions at the top and exporting the component at the bottom—borrowed from Node.js conventions. But a Reddit comment shifted my perspective: when reading a JSX file, we’re looking for the component first, not its helpers.
+
+It makes sense—prioritize readability. Placing the component at the top helps readers immediately find what matters. Scrolling through helpers, constants, and styled components just creates noise.
+
+Instead, structure files like this:
+
+Imports
+
+Interfaces (if using TypeScript)
+
+Exported component
+
+Helpers, constants, styles
+
+Show the essential parts up front, and move the supporting code below.
+2.4. Structure the Component Function
+**2.4. Structure the Component Function (Concise Version)**
+
+Just like modules, your component function should follow a consistent structure: **setup**, **logic**, **guard clauses**, and **markup**.
+
+```tsx
+export default function Component() {
+  // Setup – hooks and state
+  const [loading, setLoading] = useState();
+  const { path, query } = useRouter();
+
+  // Logic – process data
+  const displayPath = path.toUpperCase();
+
+  // Guard clauses – exit early if needed
+  if (loading) return null;
+
+  // Markup – return UI
+  return <div>{displayPath}</div>;
+}
+```
+
+* **Setup**: Define state, hooks, and initial values.
+* **Logic**: Prepare data for rendering; extract to hooks if it grows large.
+* **Guard clauses**: Exit early to avoid cluttered markup with conditionals.
+* **Markup**: Clean, readable UI that shows the "happy path."
+
+This structure improves readability and makes components easier to reason about.
+
+2.5. Use Context as an Implementation Detail
+**2.5. Use Context as an Implementation Detail (Concise Version)**
+
+React Context solves prop drilling but is **not** a state management tool—it's dependency injection. On its own, it's verbose and better used as an internal detail, hidden behind a clean API.
+
+### ✅ Best Practice:
+
+Wrap the Context in a **custom provider and hook** to abstract complexity and avoid leaking implementation details.
+
+```tsx
+// context/state.js
+const StateContext = React.createContext();
+
+const reducer = (state, action) => {
+  // handle actions
+};
+
+const initialState = {};
+
+// Provider with memoized value
+export function StateContextProvider({ children }) {
+  const [state, dispatch] = useReducer(reducer, initialState);
+  const value = useMemo(() => ({ state, dispatch }), [state, dispatch]);
+
+  return (
+    <StateContext.Provider value={value}>
+      {children}
+    </StateContext.Provider>
+  );
+}
+
+// Custom hook to access context
+export function useGlobalState() {
+  return useContext(StateContext);
+}
+```
+
+### ✅ Usage:
+
+```tsx
+function Component() {
+  const { state, dispatch } = useGlobalState();
+  // use state and dispatch without knowing it's from context
+}
+```
+
+### 🔍 Optional Enhancements:
+
+* **Split contexts**: separate state and dispatch to minimize rerenders.
+* **Abstract dispatch**: expose business actions instead of raw reducer calls.
+
+> Components should never know Context is being used. Treat it like an internal wiring detail, not a part of your public API.
+
+2.6. Create Custom Hooks
+**2.6. Create Custom Hooks (Concise Version)**
+
+Custom hooks let you **encapsulate and reuse logic**, keeping components focused on rendering, not behavior.
+
+---
+
+### ✅ When to Use Custom Hooks
+
+* Reuse business logic (e.g., data fetching, auth checks)
+* Abstract complex UI behavior (e.g., scroll tracking, visibility detection)
+* Group multiple hooks into one logical unit
+* Clean up messy state logic
+
+---
+
+### ❌ Before (logic cluttered in component):
+
+```tsx
+function Component() {
+  const [state, setState] = useState(false);
+  const on = useCallback(() => setState(true), []);
+  const off = useCallback(() => setState(false), []);
+  const toggle = useCallback(() => setState(!state), [state]);
+}
+```
+
+---
+
+### ✅ After (logic abstracted into hook):
+
+```tsx
+function useToggle() {
+  const [state, setState] = useState(false);
+
+  const handlers = useMemo(() => ({
+    on: () => setState(true),
+    off: () => setState(false),
+    toggle: () => setState((prev) => !prev),
+  }), []);
+
+  return [state, handlers];
+}
+```
+
+---
+
+### ✅ Usage:
+
+```tsx
+const [isOpen, { on, off, toggle }] = useToggle();
+```
+
+---
+
+> Custom hooks let you **hide implementation details** and **expose a clean API**. If a component has non-trivial logic or uses multiple hooks, encapsulate them. Let your components compose, not compute.
+
+2.7. Abstract Reducer Details
+**2.7. Abstract Reducer Details (Concise Version)**
+
+`useReducer` is powerful but often **leaks implementation details** (e.g., raw `dispatch` calls, action type constants) into your components.
+
+---
+
+### ❌ Problem:
+
+```tsx
+dispatch({ type: "select book", payload: index });
+```
+
+* Verbose
+* Repetitive
+* Error-prone
+* Forces components to know reducer internals
+
+---
+
+### ✅ Solution: Abstract with a custom hook
+
+```tsx
+function useBooks() {
+  const [state, dispatch] = useReducer(reducer, initialState);
+
+  return {
+    books: state,
+    selectBook: (index) =>
+      dispatch({ type: "select book", payload: index }),
+    updateBook: (book) =>
+      dispatch({ type: "update book", payload: book }),
+  };
+}
+```
+
+---
+
+### ✅ Usage in Component:
+
+```tsx
+function Component() {
+  const { books, selectBook, updateBook } = useBooks();
+  // clean, focused logic
+}
+```
+
+---
+
+> Wrap `dispatch` in clear, typed functions. Treat it like a private method. This **decouples components from reducer details**, improves safety, and simplifies refactoring.
+
+2.8. Avoid Short-Circuit Conditional Rendering
+**2.8. Avoid Short-Circuit Conditional Rendering (Concise Summary)**
+
+---
+
+### ❌ Problem: Short-circuit rendering can be **buggy** with falsy values like `0`
+
+```tsx
+const count = 0;
+return <div>{count && <h1>Messages: {count}</h1>}</div>;
+```
+
+**Result:** Renders `0`, not `null`, because `&&` returns the **first falsy operand** (`0`) — and `0` gets printed.
+
+---
+
+### ✅ Solution: Use ternary operator for clarity and safety
+
+```tsx
+const count = 0;
+return <div>{count ? <h1>Messages: {count}</h1> : null}</div>;
+```
+
+* Explicit `true` and `false` branches
+* Prevents rendering of unwanted values
+* Safer and clearer, especially in UIs
+
+---
+
+> 💡 While short-circuiting is concise, **favor clarity** in conditions that involve falsy values (`0`, `""`, `null`, `undefined`, `false`). Use ternaries to **prevent surprises** in the rendered output.
+
+2.9. Avoid Nested Ternary Operators
+**2.9. Avoid Nested Ternary Operators (Concise Summary)**
+
+---
+
+### ❌ Problem: Chaining ternaries reduces readability
+
+```tsx
+isSubscribed ? (
+  <ArticleRecommendations />
+) : isRegistered ? (
+  <SubscribeCallToAction />
+) : (
+  <RegisterCallToAction />
+);
+```
+
+* Hard to read and debug
+* Doesn’t scale well
+* Easy to misinterpret logic
+
+---
+
+### ✅ Solution: Use **early returns** in a separate component
+
+```tsx
+function CallToActionWidget({ subscribed, registered }) {
+  if (subscribed) {
+    return <ArticleRecommendations />;
+  }
+
+  if (registered) {
+    return <SubscribeCallToAction />;
+  }
+
+  return <RegisterCallToAction />;
+}
+```
+
+* Clear intent
+* One path per conditional
+* Easier to extend and test
+* Removes clutter from parent
+
+---
+
+> 💡 Prefer clarity over brevity. If a ternary needs a comment to be understandable, **break it up**. Early returns in helper components are safer and scale better.
+
+2.10. Avoid Long Conditional Chains
+**2.10. Avoid Long Conditional Chains (Summary & Best Practice)**
+
+---
+
+### Problem:
+
+* Multiple guard clauses become cumbersome
+* Imperative code that depends on condition order
+* Hard to maintain and extend
+
+---
+
+### Solution: Use an **object component map**
+
+```tsx
+const PromptComponents = {
+  guest: GuestPrompt,
+  registered: RegisteredPrompt,
+  subscriber: SubscriberPrompt,
+  promotion: PromotionPrompt,
+  pro: LatestStories,
+};
+
+function Prompt({ state }) {
+  const Component = PromptComponents[state];
+  return Component ? <Component /> : null; // or show fallback/error
+}
+```
+
+---
+
+### Why it’s better:
+
+* Simplifies the component to just picking the right component
+* Adding new cases means adding new entries, no logic changes
+* All cases treated equally, no implicit priority
+* More declarative and easier to read
+
+---
+
+### TypeScript tip:
+
+```ts
+enum PromptState {
+  Guest = 'guest',
+  Registered = 'registered',
+  Subscriber = 'subscriber',
+  Promotion = 'promotion',
+  Pro = 'pro',
+}
+
+const PromptComponents: Record<PromptState, React.FC> = {
+  [PromptState.Guest]: GuestPrompt,
+  [PromptState.Registered]: RegisteredPrompt,
+  [PromptState.Subscriber]: SubscriberPrompt,
+  [PromptState.Promotion]: PromotionPrompt,
+  [PromptState.Pro]: LatestStories,
+};
+
+function Prompt({ state }: { state: PromptState }) {
+  const Component = PromptComponents[state];
+  if (!Component) {
+    throw new Error(`Unknown prompt state: ${state}`);
+  }
+  return <Component />;
+}
+```
+
+---
+
+> Use component maps to replace long conditional chains — cleaner, more maintainable, and easier to extend.
+
+2.11. Use Component Maps for Complex Conditional Logic
+**2.11. Use Component Maps for Complex Conditional Logic (Summary & Best Practice)**
+
+---
+
+### Problem:
+
+* Simple component maps only handle "which component to render"
+* Often, we also want to vary behavior: titles, handlers, extra markup, etc.
+* Avoid multiple separate maps or complicated conditionals scattered in the component
+
+---
+
+### Solution: Use a **single, unified object map** that bundles all varying data
+
+```tsx
+const PromptComponents = {
+  guest: {
+    title: "Register to read 3 free articles",
+    Component: RegisterPrompt,
+    handler: handleRegistration,
+  },
+  registered: {
+    title: "Subscribe for unlimited content",
+    Component: SubscriberPrompt,
+    handler: handleSubscription,
+  },
+  // more states...
+};
+
+function Prompt({ state }) {
+  const { title, Component, handler } = PromptComponents[state];
+
+  return (
+    <div>
+      <h3>{title}</h3>
+      <Component />
+      <button onClick={handler}>Submit</button>
+    </div>
+  );
+}
+```
+
+---
+
+### Why it’s better:
+
+* All related data and behavior for a given state is in one place — easy to update
+* Component implementation remains clean, only "fills in the blanks"
+* No conditional logic inside the component, preserving clarity
+* Avoids inline conditional checks scattered around markup, improving maintainability
+
+---
+
+### Additional tips:
+
+* Always keep the map comprehensive — even if one state differs slightly, add an entry for it explicitly
+* You can extend this pattern with more properties in the map (e.g., styles, icons, extra callbacks)
+* This makes scaling UI states and variations straightforward and predictable
+
+---
+
+> **Bottom line:** For complex UI variations beyond just rendering components, unify all relevant data and behavior in a single object map to keep your components clean and declarative.
+
+2.12. Avoid Top Level Conditionals in JSX
+**2.12. Avoid Top Level Conditionals in JSX (Summary & Best Practice)**
+
+---
+
+### Problem:
+
+* Using conditionals *inside* JSX (like `return loading ? null : <div>...</div>`) buries the main rendering path under exceptions.
+* Makes it harder to immediately understand what the component normally renders.
+* Complex conditionals can clutter JSX and reduce clarity.
+
+---
+
+### Solution: Use **guard clauses** — early returns *before* the JSX return
+
+```tsx
+function Component({ loading }) {
+  if (loading) {
+    return null;  // or a loading spinner / message
+  }
+
+  return <div>...</div>;
+}
+```
+
+---
+
+### Benefits:
+
+* **Separates the happy path** (normal UI) from exceptions clearly
+* **Simplifies** the return statement — no inline ternaries or complex expressions
+* **Improves readability** — devs know where to focus on component logic
+* **Extensible** — easy to add more guard clauses for errors, access checks, etc.
+
+---
+
+### General pattern:
+
+```tsx
+function Component(props) {
+  if (props.loading) return <LoadingIndicator />;
+  if (props.error) return <ErrorMessage />;
+  if (!props.hasAccess) return <AccessDenied />;
+
+  // Happy path: main UI rendering
+  return (
+    <main>
+      {/* normal content */}
+    </main>
+  );
+}
+```
+
+---
+
+**Bottom line:**
+Put all early-exit or exceptional cases *before* your main JSX return. This keeps your component’s “happy path” obvious, clean, and easy to maintain.
+
+2.13. Create a Common Error Boundary Component
+2.14. Use Error Boundaries for Non-Critical UI Sections
+Got it! Here’s a concise, mostly code-focused version for 2.14:
+
+---
+
+### 2.14 Use Error Boundaries for Non-Critical UI Sections
+
+```jsx
+// Wrap non-critical parts to isolate errors and keep UI intact
+
+function Page() {
+  return (
+    <>
+      <Header />
+
+      <ErrorBoundary fallback={<WidgetFallback />}>
+        <SidebarWidget />
+      </ErrorBoundary>
+
+      <ErrorBoundary fallback={<DetailsFallback />}>
+        <DetailsSection />
+      </ErrorBoundary>
+
+      <MainContent />
+    </>
+  );
+}
+
+// Fallback preserves layout space
+function WidgetFallback() {
+  return <div className="widget-fallback">Widget unavailable</div>;
+}
+
+// Global error boundary for entire app/page
+function App() {
+  return (
+    <ErrorBoundary fallback={<GlobalFallback />}>
+      <Page />
+    </ErrorBoundary>
+  );
+}
+```
+
+* Wrap **widgets, sidebars, or sections** that might fail.
+* Use fallback UI that **preserves layout** (avoid gaps).
+* Use a **top-level error boundary** to catch major errors.
+* Optional: fallback can render a **preview mode** or message.
+* This approach **keeps the app stable** and improves UX.
+
+2.15. Use Reducers for State Management
+2.16. You May Not Need a State Management Library
+State libraries influence your app’s data flow and patterns. Most small to medium apps do fine with React’s built-in state, useReducer, and Context. Use external libraries when:
+
+Your state is large and updates frequently in many places.
+
+State update logic and side effects are complex (e.g., many API calls).
+
+You have a large team and want standardized state management.
+
+You want to trace state changes with introspection tools.
+
+Consider minimalistic libraries like Recoil, Jotai, and Zustand—they use React hooks and atoms without overhauling your app’s design.
+
+2.17. Use Data Fetching Libraries
+React has no built-in opinion on data fetching, so teams often write their own service modules, managing loading and errors repeatedly. To avoid boilerplate, use libraries like React Query, SWR, or Apollo Client (for GraphQL). They:
+
+Handle loading and error states automatically via hooks.
+
+Keep fetching logic separate in business logic files (e.g., api/ folder).
+
+Enable composing custom hooks that format or aggregate data on top.
+
+This is simpler and lighter than older state libraries focused on data caching.
+
+2.18. Favour Functional Components
+Class components are verbose and complex due to lifecycle methods. Functional components with hooks are simpler, more readable, and execute top-to-bottom every render:
+
+jsx
+Copy
+Edit
+class Counter extends React.Component {
+  state = { counter: 0 };
+  constructor(props) {
+    super(props);
+    this.handleClick = this.handleClick.bind(this);
+  }
+  handleClick() {
+    this.setState({ counter: this.state.counter + 1 });
+  }
+  render() {
+    return (
+      <div>
+        <p>counter: {this.state.counter}</p>
+        <button onClick={this.handleClick}>Increment</button>
+      </div>
+    );
+  }
+}
+
+function Counter() {
+  const [counter, setCounter] = useState(0);
+  const handleClick = () => setCounter(counter + 1);
+  return (
+    <div>
+      <p>counter: {counter}</p>
+      <button onClick={handleClick}>Increment</button>
+    </div>
+  );
+}
+Prefer functional components for consistency and easier refactoring. Error boundaries remain an exception requiring class components.
+
+2.19. Write Consistent Components
+Consistency in naming, structure, and helper placement reduces mental overhead and improves team collaboration. Code should feel like it’s written by one person. Inconsistencies are subtle code smells that waste time.
+
+If inheriting legacy code, improve it gradually and always leave it better ("boy scout principle").
+
+2.20. Always Name Components
+Avoid anonymous functions for components:
+
+jsx
+Copy
+Edit
+// Avoid
+export default () => <form>...</form>;
+
+// Prefer
+export default function Form() {
+  return <form>...</form>;
+}
+Named components give better error messages, clearer React DevTools traces, and improve developer experience when working with multiple files.
+
+2.21. Don’t Hardcode Repetitive Markup
+Avoid hardcoding lists; use configuration objects instead. Example:
+
+jsx
+Copy
+Edit
+function Filters({ onFilterClick }) {
+  return (
+    <>
+      <p>Book Genres</p>
+      <ul>
+        {GENRES.map((genre) => (
+          <li key={genre.identifier}>
+            <div onClick={() => onFilterClick(genre.identifier)}>
+              {genre.name}
+            </div>
+          </li>
+        ))}
+      </ul>
+    </>
+  );
+}
+
+const GENRES = [
+  { identifier: "fiction", name: "Fiction" },
+  { identifier: "classics", name: "Classics" },
+  { identifier: "fantasy", name: "Fantasy" },
+  { identifier: "romance", name: "Romance" },
+];
+This improves maintainability, reduces copy-paste errors, and makes extending the component easier.
+
+2.22. Organise Helper Functions
+Short, simple logic can stay inline. Complex or long helpers should be extracted outside the JSX for clarity and reuse. Prefer pure functions outside the component body:
+
+jsx
+Copy
+Edit
+function Component({ date }) {
+  return <div>Date is {formatDate(date)}</div>;
+}
+
+function formatDate(date) {
+  // ...
+}
+Keeping helpers outside reduces component size, improves testability, and clarifies dependencies by passing needed values explicitly.
+2.23. Favour Small Components
+React apps are easier to manage with many small components. Components are just functions that take props and return JSX. Each component should do one thing—render an element and handle its logic. Smaller components have fewer responsibilities, fewer conditionals, fewer side effects, and are easier to read, test, and maintain.
+
+If a component is complex (like a page), it should act as an entry point that delegates logic to smaller child components.
+
+2.24. Write Comments in JSX
+Write comments in JSX to clarify business logic, especially around conditional rendering or domain-specific details. Comments explain why something is done; code shows how. This helps new developers understand the intent without guessing.
+
+jsx
+Copy
+Edit
+function Component({ user }) {
+  return (
+    <>
+      {/** Only authenticated users can shop. */}
+      {user.anonymous ? <AuthPrompt /> : <Cart />}
+    </>
+  );
+}
+2.25. Always Destructure Props
+React components receive one argument: the props object. Instead of accessing props.value, destructure props in the function signature to work with values directly—this aligns with regular functions and simplifies code.
+
+jsx
+Copy
+Edit
+// Avoid:
+function Input(props) {
+  return <input value={props.value} onChange={props.onChange} />;
+}
+// Prefer:
+function Input({ value, onChange }) {
+  return <input value={value} onChange={onChange} />;
+}
+2.26. Be Careful With Number of Passed Props
+Many props may indicate too many responsibilities or leaky abstractions. If a component takes more than about 5 props, review its design. Too many unrelated props suggest splitting the component or providing sensible defaults to reduce required props.
+
+Highly configurable components exposing every attribute can be simplified by splitting or wrapping them with components that provide defaults. Also, fewer props reduce unnecessary re-renders.
+
+2.27. Assign Default Props When Destructuring
+Avoid React’s defaultProps and use JavaScript’s default parameters in destructuring. This keeps default values and prop definitions in one place for easier reading.
+
+jsx
+Copy
+Edit
+// Avoid:
+function Component({ title, tags, subscribed }) { ... }
+Component.defaultProps = {
+  title: "",
+  tags: [],
+  subscribed: false,
+};
+// Prefer:
+function Component({
+  title = "",
+  tags = [],
+  subscribed = false,
+}) {
+  return <div>...</div>;
+}
+2.28. Pass Objects Instead of Primitives
+If many related props are passed, consider grouping them into an object to clarify intent and reduce prop lists.
+
+jsx
+Copy
+Edit
+// Verbose:
+<UserProfile
+  bio={user.bio}
+  name={user.name}
+  email={user.email}
+  subscription={user.subscription}
+/>
+
+// Cleaner when most fields used:
+<UserProfile user={user} />
+2.29. Avoid Spreading Props
+Avoid spreading objects into component props ({...obj}) because it hides which props are passed, increasing obscurity. Instead, pass an object explicitly or list needed props clearly.
+
+jsx
+Copy
+Edit
+// Avoid:
+<Article category={category} author={author} {...article} />
+
+// Prefer either:
+<Article
+  author={author}
+  category={category}
+  title={article.title}
+  url={article.url}
+  content={article.content}
+/>
+
+// Or modify component to accept the whole article object:
+<Article author={author} category={category} article={article} />
+
+2.30. Move Lists in Components
+When rendering lists, especially complex ones, extract them into their own child component for better readability and separation of concerns.
+
+Before:
+
+jsx
+Copy
+Edit
+function Component({ topic, page, articles, onNextPage }) {
+  return (
+    <div>
+      <h1>{topic}</h1>
+      {articles.map(article => (
+        <div key={article.id}>
+          <h3>{article.title}</h3>
+          <p>{article.teaser}</p>
+          <img src={article.image} />
+        </div>
+      ))}
+      <div>You are on page {page}</div>
+      <button onClick={onNextPage}>Next</button>
+    </div>
+  );
+}
+After:
+
+jsx
+Copy
+Edit
+function Component({ topic, page, articles, onNextPage }) {
+  return (
+    <div>
+      <h1>{topic}</h1>
+      <ArticlesList articles={articles} />
+      <div>You are on page {page}</div>
+      <button onClick={onNextPage}>Next</button>
+    </div>
+  );
+}
+
+function ArticlesList({ articles }) {
+  return articles.map(article => (
+    <div key={article.id}>
+      <h3>{article.title}</h3>
+      <p>{article.teaser}</p>
+      <img src={article.image} />
+    </div>
+  ));
+}
+2.31. Avoid Nested Render Functions
+Don’t define render functions inside components. Instead, extract these as separate components to improve readability and avoid closure issues.
+
+Avoid:
+
+jsx
+Copy
+Edit
+function Component() {
+  function renderHeader() {
+    return <header>...</header>;
+  }
+  return <div>{renderHeader()}</div>;
+}
+Prefer:
+
+jsx
+Copy
+Edit
+import Header from './Header';
+
+function Component() {
+  return (
+    <div>
+      <Header />
+    </div>
+  );
+}
+2.32. Favor Hooks
+Hooks are the cleanest way to compose logic in components compared to higher-order components (HOCs) or render props, which complicate prop management and markup.
+
+Example with render props (complex):
+
+jsx
+Copy
+Edit
+function Component() {
+  return (
+    <Form>
+      {({ values, setValue }) => (
+        <>
+          <input value={values.name} onChange={e => setValue('name', e.target.value)} />
+          <input value={values.password} onChange={e => setValue('password', e.target.value)} />
+        </>
+      )}
+    </Form>
+  );
+}
+Better with hooks:
+
+jsx
+Copy
+Edit
+function Component() {
+  const [values, setValue] = useForm();
+  return (
+    <>
+      <input value={values.name} onChange={e => setValue('name', e.target.value)} />
+      <input value={values.password} onChange={e => setValue('password', e.target.value)} />
+    </>
+  );
+}
+2.33. Model Components as Stateless and Stateful
+Instead of “container vs presentational,” think in terms of stateful (manage their own logic/state) and stateless (only render with props) components. Assign responsibilities to where they naturally belong.
+
+Components that fetch and show filters should handle that themselves.
+
+Forms should validate and show errors but leave submission handling to parents.
+
+2.34. Favor Multiple Smaller useEffect Calls over One Big One
+Avoid cramming unrelated logic (fetching data, event listeners, timers) into one useEffect. Split concerns into separate hooks for clarity and maintainability.
+
+Avoid:
+
+jsx
+Copy
+Edit
+useEffect(() => {
+  // fetch data
+  // add resize listener
+  // start countdown timer
+
+  return () => {
+    // cleanup all
+  };
+}, [filter]);
+Prefer:
+
+jsx
+Copy
+Edit
+// Fetch data when filter changes
+useEffect(() => {
+  async function fetchData() {
+    try {
+      const response = await axios.get(`https://api.com/data?filter=${filter}`);
+      setData(response.data);
+    } catch (e) {
+      console.error(e);
+    }
+  }
+  fetchData();
+}, [filter]);
+
+// Setup resize listener once
+useEffect(() => {
+  const handleResize = () => setWindowWidth(window.innerWidth);
+  window.addEventListener('resize', handleResize);
+  return () => window.removeEventListener('resize', handleResize);
+}, []);
+
+// Start countdown once
+useEffect(() => {
+  const interval = setInterval(() => {
+    setCountdown(prev => (prev > 0 ? prev - 1 : 0));
+  }, 1000);
+  return () => clearInterval(interval);
+}, []);
+
+2.35 Favor Focused useEffect Calls Over Excessive Granularity
+Splitting related logic into multiple useEffect hooks can cause chained triggers that complicate readability and add unnecessary state.
+
+Anti-pattern: Separate effects for fetching and processing data:
+
+jsx
+Copy
+Edit
+const [users, setUsers] = useState([]);
+const [processedUsers, setProcessedUsers] = useState([]);
+
+// Fetch data
+useEffect(() => {
+  const fetchUsers = async () => {
+    try {
+      const response = await fetch("https://some.rest.api/v1");
+      const data = await response.json();
+      setUsers(data);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+    }
+  };
+  fetchUsers();
+}, []);
+
+// Process data
+useEffect(() => {
+  if (users.length > 0) {
+    const mappedUsers = users.map(user => ({
+      ...user,
+      fullName: `${user.name.first} ${user.name.last}`,
+    }));
+    setProcessedUsers(mappedUsers);
+  }
+}, [users]);
+Better: Combine fetch and process in one focused effect:
+
+jsx
+Copy
+Edit
+const [processedUsers, setProcessedUsers] = useState([]);
+
+useEffect(() => {
+  const fetchAndProcessUsers = async () => {
+    try {
+      const response = await fetch("https://some.rest.api/v1");
+      const users = await response.json();
+      const mappedUsers = users.map(user => ({
+        ...user,
+        fullName: `${user.name.first} ${user.name.last}`,
+      }));
+      setProcessedUsers(mappedUsers);
+    } catch (error) {
+      console.error("Error fetching and processing users:", error);
+    }
+  };
+  fetchAndProcessUsers();
+}, []);
+Keep each useEffect focused on a whole logical operation, not fragmented steps.
+
+2.36 Whenever Possible, Don’t Fetch Data in useEffect
+Fetching data inside useEffect delays downstream components, causing waterfall loading spinners.
+
+Prefer fetching data early, at higher app levels (route loaders, server-side props, or caching libraries like react-query).
+
+Avoid useEffect fetching in new projects for better UX.
+
+For existing apps or dashboards where speed isn't critical, using spinners is acceptable.
+
+2.37 Don’t Handle Events Inside useEffect
+Using useEffect to respond to events (e.g., button clicks) by toggling state flags complicates code unnecessarily.
+
+Anti-pattern:
+
+jsx
+Copy
+Edit
+const [data, setData] = useState([]);
+const [fetching, setFetching] = useState(false);
+
+useEffect(() => {
+  if (fetching) {
+    service.getNextPage().then(nextPageData => {
+      setData([...data, ...nextPageData]);
+      setFetching(false);
+    });
+  }
+}, [fetching]);
+
+return (
+  <>
+    <Dashboard data={data} />
+    <button onClick={() => setFetching(true)}>Load More</button>
+  </>
+);
+Better: Handle events imperatively without useEffect:
+
+jsx
+Copy
+Edit
+const [data, setData] = useState([]);
+
+const handleLoadMore = () => {
+  service.getNextPage().then(nextPageData => {
+    setData([...data, ...nextPageData]);
+  });
+};
+
+return (
+  <>
+    <Dashboard data={data} />
+    <button onClick={handleLoadMore}>Load More</button>
+  </>
+);
+Treat event handling as direct imperative actions.
+
+2.38 Avoid useEffect for Computed Data
+Don’t use useEffect to compute derived data that can be calculated inline or with useMemo.
+
+Anti-pattern:
+
+jsx
+Copy
+Edit
+const UsersList = ({ users }) => {
+  const [userCount, setUserCount] = useState(0);
+
+  useEffect(() => {
+    setUserCount(users.length);
+  }, [users]);
+
+  return (
+    <>
+      <h1>Users List</h1>
+      <h2>Total Users: {userCount}</h2>
+      <ul>{users.map(user => <li key={user.id}>{user.name}</li>)}</ul>
+    </>
+  );
+};
+Better:
+
+jsx
+Copy
+Edit
+const UsersList = ({ users }) => (
+  <>
+    <h1>Users List</h1>
+    <h2>Total Users: {users.length}</h2>
+    <ul>{users.map(user => <li key={user.id}>{user.name}</li>)}</ul>
+  </>
+);
+For expensive computations, use useMemo instead.
+
+2.39 Put Component Logic in Custom Hooks
+Extract business logic, state, and effects into a custom hook to keep components lean and focused on rendering.
+
+Without custom hook:
+
+jsx
+Copy
+Edit
+const ShoppingCart = () => {
+  const [cart, setCart] = useState([]);
+
+  useEffect(() => {
+    const fetchCartContents = async () => {
+      const data = await cartService.getContents();
+      setCart(data);
+    };
+    fetchCartContents();
+  }, []);
+
+  const addItemToCart = (item) => {
+    setCart(prev => [...prev, item]);
+    cartService.addItemToCart(item);
+  };
+
+  const removeItemFromCart = (item) => {
+    setCart(prev => prev.filter(i => i !== item));
+    cartService.removeItemFromCart(item);
+  };
+
+  const clearCart = () => {
+    setCart([]);
+    cartService.clearCart();
+  };
+
+  return (
+    <>
+      <h1>Shopping Cart</h1>
+      {cart.map((item, i) => (
+        <div key={i}>
+          <p>{item}</p>
+          <button onClick={() => removeItemFromCart(item)}>Remove</button>
+        </div>
+      ))}
+      <button onClick={clearCart}>Clear Cart</button>
+      <ProductList onClick={addItemToCart} />
+    </>
+  );
+};
+With custom hook:
+
+jsx
+Copy
+Edit
+const useShoppingCart = () => {
+  const [cart, setCart] = useState([]);
+
+  useEffect(() => {
+    cartService.getContents().then(setCart);
+  }, []);
+
+  const addItemToCart = (item) => {
+    setCart(prev => [...prev, item]);
+    cartService.addItemToCart(item);
+  };
+
+  const removeItemFromCart = (item) => {
+    setCart(prev => prev.filter(i => i !== item));
+    cartService.removeItemFromCart(item);
+  };
+
+  const clearCart = () => {
+    setCart([]);
+    cartService.clearCart();
+  };
+
+  return { cart, addItemToCart, removeItemFromCart, clearCart };
+};
+
+const ShoppingCart = () => {
+  const { cart, addItemToCart, removeItemFromCart, clearCart } = useShoppingCart();
+
+  return (
+    <>
+      <h1>Shopping Cart</h1>
+      {cart.map((item, i) => (
+        <div key={i}>
+          <p>{item}</p>
+          <button onClick={() => removeItemFromCart(item)}>Remove</button>
+        </div>
+      ))}
+      <button onClick={clearCart}>Clear Cart</button>
+      <ProductList onClick={addItemToCart} />
+    </>
+  );
+};
+This keeps components focused on UI and makes logic reusable and testable.
+2.40 Consider Component Composition Before Contexts
+Prop drilling—passing data through many components that don't use it—adds complexity and makes testing harder.
+
+jsx
+Copy
+Edit
+function App() {
+  const [user] = useState({ name: "John" });
+  return <Dashboard user={user} />;
+}
+function Dashboard({ user }) {
+  return (
+    <>
+      <DashboardHeader />
+      <DashboardContent user={user} />
+    </>
+  );
+}
+function DashboardContent({ user }) {
+  return <WelcomeMessage user={user} />;
+}
+function WelcomeMessage({ user }) {
+  return <h1>Welcome, {user.name}!</h1>;
+}
+Instead of drilling, use component composition with children to implicitly pass data without props everywhere:
+
+jsx
+Copy
+Edit
+function App() {
+  const [user] = useState({ name: "John" });
+  return (
+    <Dashboard>
+      <DashboardHeader />
+      <DashboardContent>
+        <WelcomeMessage user={user} />
+      </DashboardContent>
+    </Dashboard>
+  );
+}
+function Dashboard({ children }) {
+  return <>Dashboard {children}</>;
+}
+function DashboardContent({ children }) {
+  return <main>{children}</main>;
+}
+function WelcomeMessage({ user }) {
+  return <h1>Welcome, {user.name}!</h1>;
+}
+This reduces unnecessary props and keeps components simpler. It’s not always applicable but is a useful low-complexity alternative to contexts.
+
+2.41 Extract a Component For Repetitive Logic
+When similar UI logic repeats, extract it into reusable components instead of utility functions that return JSX.
+
+Example - original inline status display:
+
+jsx
+Copy
+Edit
+const UserList = ({ users }) => (
+  <ul>
+    {users.map(u => (
+      <li key={u.id}>
+        {u.name} - 
+        {u.status === "online" ? <span style={{ color: "green" }}>Online</span> : <span style={{ color: "red" }}>Offline</span>}
+      </li>
+    ))}
+  </ul>
+);
+Better: extract status styling helpers, but this still scatters markup:
+
+js
+Copy
+Edit
+const getStatusText = (status) => status === "online" ? "Online" : "Offline";
+const getStatusStyles = (status) => status === "online" ? { color: "green" } : { color: "red" };
+Best: extract a component to encapsulate JSX and logic:
+
+jsx
+Copy
+Edit
+const UserStatus = ({ user }) => (
+  <div>
+    {user.name} - 
+    {user.status === "online" ? <span style={{ color: "green" }}>Online</span> : <span style={{ color: "red" }}>Offline</span>}
+  </div>
+);
+
+const UserList = ({ users }) => (
+  <ul>
+    {users.map(u => (
+      <li key={u.id}>
+        <UserStatus user={u} />
+      </li>
+    ))}
+  </ul>
+);
+This hides complexity, improves readability, and keeps markup consistent.
+
+2.42 Don’t Extract Custom Components Without Purpose
+Avoid over-engineering by creating components that add no reuse, abstraction, or complexity reduction.
+
+jsx
+Copy
+Edit
+const Header = ({ user }) => (
+  <div>
+    <WelcomeMessage name={user.name} />
+    <p>Enjoy your stay.</p>
+  </div>
+);
+const WelcomeMessage = ({ name }) => <h2>Welcome, {name}!</h2>;
+This small WelcomeMessage component is unlikely to be reused or hide complexity, so it may harm readability rather than help.
+
+Before extracting a component, ask:
+
+Will it be reused?
+
+Does it remove complexity?
+
+Does it encapsulate logic?
+
+Does it abstract a large markup block?
+
+If not, it’s often better to keep it inline for clarity.
