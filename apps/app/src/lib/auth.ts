@@ -73,11 +73,18 @@ export const authOptions: NextAuthOptions = {
       }
       return token
     },
+    redirect: async ({ url, baseUrl }) => {
+      // Handle sign out redirect
+      if (url.startsWith('/')) return `${baseUrl}${url}`
+      else if (new URL(url).origin === baseUrl) return url
+      return 'http://localhost:3000' // Redirect to landing page after sign out
+    },
   },
   session: {
     strategy: "jwt",
   },
   pages: {
     signIn: "/auth/signin",
+    signOut: "http://localhost:3000", // Redirect to landing page
   },
 }

@@ -1,9 +1,10 @@
 'use client'
 
-import { useSession, signIn, signOut } from 'next-auth/react'
+import { useSession, signIn } from 'next-auth/react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Badge, Users, MapPin, ExternalLink, Edit, LogIn, LogOut, Home, Calendar, Map, List } from 'lucide-react'
+import { Badge, Users, MapPin, ExternalLink, Calendar, Map, List, Home, LogIn, Edit } from 'lucide-react'
+import { Navigation } from '@/components/ui/navigation'
 import Link from 'next/link'
 import { Wrapper, Status } from '@googlemaps/react-wrapper'
 import { useState, useEffect, useRef } from 'react'
@@ -95,7 +96,6 @@ const sampleHouses = [
     ]
   }
 ]
-
 
 type HouseType = typeof sampleHouses[0]
 
@@ -247,136 +247,9 @@ export default function DashboardPage() {
     )
   }
 
-  // Enhanced hacker houses data with real SF coordinates
-  const sampleHouses = [
-    {
-      id: '1',
-      name: 'Hacker House SOMA',
-      neighborhood: 'SOMA',
-      description: 'Premier AI/ML focused house in the heart of SF tech scene. Weekly demo days, 24/7 workspace, and direct connections to top VCs.',
-      memberCount: 12,
-      focusAreas: ['AI/ML', 'Startups', 'Deep Tech'],
-      coordinates: { lat: 37.7849, lng: -122.4094 }, // SOMA coordinates
-      address: '850 Bryant St, San Francisco, CA 94103',
-      image: 'https://images.unsplash.com/photo-1513475382585-d06e58bcb0e0?w=400&h=300&fit=crop',
-      amenities: ['Co-working Space', 'High-speed Internet', 'Weekly Demo Days', 'Mentorship Program'],
-      members: [
-        { name: 'Alex Chen', title: 'ML Engineer', company: 'OpenAI', image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=40&h=40&fit=crop&crop=face' },
-        { name: 'Sarah Kim', title: 'Product Manager', company: 'Anthropic', image: 'https://images.unsplash.com/photo-1494790108755-2616b885e592?w=40&h=40&fit=crop&crop=face' },
-        { name: 'Mike Torres', title: 'Founder', company: 'Stealth AI', image: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face' },
-        { name: 'Emma Rodriguez', title: 'Research Scientist', company: 'Meta', image: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=40&h=40&fit=crop&crop=face' }
-      ]
-    },
-    {
-      id: '2',
-      name: 'Mission Builders',
-      neighborhood: 'Mission',  
-      description: 'Web3 and crypto-focused collaborative living space. Building the future of decentralized finance with daily standups and weekend hackathons.',
-      memberCount: 8,
-      focusAreas: ['Web3', 'DeFi', 'Blockchain'],
-      coordinates: { lat: 37.7599, lng: -122.4148 }, // Mission coordinates
-      address: '3200 16th St, San Francisco, CA 94103',
-      image: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=400&h=300&fit=crop',
-      amenities: ['Trading Setup', 'Ethereum Node', 'Security Audits', 'Legal Support'],
-      members: [
-        { name: 'Jamie Rodriguez', title: 'Smart Contract Dev', company: 'Uniswap', image: 'https://images.unsplash.com/photo-1519345182560-3f2917c472ef?w=40&h=40&fit=crop&crop=face' },
-        { name: 'Emma Liu', title: 'Protocol Engineer', company: 'Coinbase', image: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=40&h=40&fit=crop&crop=face' },
-        { name: 'David Chen', title: 'DeFi Researcher', company: 'Compound', image: 'https://images.unsplash.com/photo-1463453091185-61582044d556?w=40&h=40&fit=crop&crop=face' }
-      ]
-    },
-    {
-      id: '3',
-      name: 'Castro Tech Collective',
-      neighborhood: 'Castro',
-      description: 'Hardware and IoT innovation hub with a fully equipped lab. From wearables to smart city solutions, we build the physical layer of tech.',
-      memberCount: 6,
-      focusAreas: ['Hardware', 'IoT', 'Robotics'],
-      coordinates: { lat: 37.7609, lng: -122.4350 }, // Castro coordinates
-      address: '2200 Market St, San Francisco, CA 94114',
-      image: 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=400&h=300&fit=crop',
-      amenities: ['Electronics Lab', '3D Printers', 'PCB Assembly', 'Testing Equipment'],
-      members: [
-        { name: 'David Park', title: 'Hardware Engineer', company: 'Apple', image: 'https://images.unsplash.com/photo-1463453091185-61582044d556?w=40&h=40&fit=crop&crop=face' },
-        { name: 'Lisa Wang', title: 'Robotics Engineer', company: 'Boston Dynamics', image: 'https://images.unsplash.com/photo-1494790108755-2616b885e592?w=40&h=40&fit=crop&crop=face' }
-      ]
-    },
-    {
-      id: '4',
-      name: 'Marina Code House',
-      neighborhood: 'Marina',
-      description: 'Full-stack development house with ocean views. Focus on scalable systems, cloud architecture, and modern web technologies.',
-      memberCount: 10,
-      focusAreas: ['Full-Stack', 'Cloud', 'DevOps'],
-      coordinates: { lat: 37.8021, lng: -122.4086 }, // Marina coordinates
-      address: '1800 Lombard St, San Francisco, CA 94123',
-      image: 'https://images.unsplash.com/photo-1555636222-cae831e670b3?w=400&h=300&fit=crop',
-      amenities: ['Ocean Views', 'Kubernetes Cluster', 'Multi-Cloud Setup', 'Pair Programming Stations'],
-      members: [
-        { name: 'Ryan Kim', title: 'Staff Engineer', company: 'Stripe', image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=40&h=40&fit=crop&crop=face' },
-        { name: 'Sophia Martinez', title: 'DevOps Engineer', company: 'Datadog', image: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=40&h=40&fit=crop&crop=face' },
-        { name: 'Kevin Zhang', title: 'Solutions Architect', company: 'AWS', image: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face' }
-      ]
-    },
-    {
-      id: '5',
-      name: 'Pac Heights Product House',
-      neighborhood: 'Pacific Heights',
-      description: 'Product-focused house where designers and PMs collaborate. We ship consumer products that millions of people use daily.',
-      memberCount: 7,
-      focusAreas: ['Product Design', 'UX/UI', 'Consumer Tech'],
-      coordinates: { lat: 37.7886, lng: -122.4324 }, // Pacific Heights coordinates
-      address: '2400 Pacific Ave, San Francisco, CA 94115',
-      image: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400&h=300&fit=crop',
-      amenities: ['Design Studio', 'User Testing Lab', 'Prototyping Tools', 'Product Library'],
-      members: [
-        { name: 'Maya Patel', title: 'Senior Designer', company: 'Figma', image: 'https://images.unsplash.com/photo-1494790108755-2616b885e592?w=40&h=40&fit=crop&crop=face' },
-        { name: 'James Wilson', title: 'Product Manager', company: 'Notion', image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=40&h=40&fit=crop&crop=face' }
-      ]
-    }
-  ]
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-orange-50">
-      {/* Header */}
-      <header className="bg-white/80 backdrop-blur-sm border-b border-pink-200 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full flex items-center justify-center">
-                <Home className="w-5 h-5 text-white" />
-              </div>
-              <h1 className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-                SF Hacker Houses ✨
-              </h1>
-            </div>
-            <div className="flex items-center space-x-4">
-              <Link href="/badges/create">
-                <Button variant="ghost" size="sm" className="bg-gradient-to-r from-purple-100 to-pink-100 hover:from-purple-200 hover:to-pink-200 text-purple-700">
-                  <Badge className="w-4 h-4 mr-2" />
-                  Create Badge
-                </Button>
-              </Link>
-              <Link href="/profile">
-                <Button variant="ghost" size="sm">
-                  <Edit className="w-4 h-4 mr-2" />
-                  Edit Profile
-                </Button>
-              </Link>
-              <div className="text-sm text-gray-600">
-                {session.user?.name || session.user?.email}
-              </div>
-              <Button
-                onClick={() => signOut()}
-                variant="outline"
-                size="sm"
-              >
-                <LogOut className="w-4 h-4 mr-2" />
-                Sign out
-              </Button>
-            </div>
-          </div>
-        </div>
-      </header>
+      <Navigation />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Profile Status */}
@@ -450,6 +323,67 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Community Explorer */}
+        <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-sm mb-8">
+          <CardHeader>
+            <CardTitle className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+              🌟 Explore SF Tech Community
+            </CardTitle>
+            <p className="text-gray-600">Discover founders, projects, houses, and achievements from the SF hackathon ecosystem</p>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <Link href="/founders">
+                <Card className="cursor-pointer hover:shadow-lg transition-all duration-300 hover:scale-105 bg-gradient-to-br from-blue-50 to-purple-50 border-blue-200">
+                  <CardContent className="p-6 text-center">
+                    <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center mx-auto mb-3">
+                      <Users className="w-6 h-6 text-white" />
+                    </div>
+                    <h3 className="font-bold text-gray-900 mb-2">Founders</h3>
+                    <p className="text-sm text-gray-600">Meet brilliant founders building the future</p>
+                  </CardContent>
+                </Card>
+              </Link>
+
+              <Link href="/projects">
+                <Card className="cursor-pointer hover:shadow-lg transition-all duration-300 hover:scale-105 bg-gradient-to-br from-purple-50 to-pink-50 border-purple-200">
+                  <CardContent className="p-6 text-center">
+                    <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-600 rounded-xl flex items-center justify-center mx-auto mb-3">
+                      <Badge className="w-6 h-6 text-white" />
+                    </div>
+                    <h3 className="font-bold text-gray-900 mb-2">Projects</h3>
+                    <p className="text-sm text-gray-600">Innovative hackathon projects and demos</p>
+                  </CardContent>
+                </Card>
+              </Link>
+
+              <Link href="/houses">
+                <Card className="cursor-pointer hover:shadow-lg transition-all duration-300 hover:scale-105 bg-gradient-to-br from-green-50 to-blue-50 border-green-200">
+                  <CardContent className="p-6 text-center">
+                    <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-blue-600 rounded-xl flex items-center justify-center mx-auto mb-3">
+                      <Home className="w-6 h-6 text-white" />
+                    </div>
+                    <h3 className="font-bold text-gray-900 mb-2">All Houses</h3>
+                    <p className="text-sm text-gray-600">Comprehensive house directory</p>
+                  </CardContent>
+                </Card>
+              </Link>
+
+              <Link href="/external-badges">
+                <Card className="cursor-pointer hover:shadow-lg transition-all duration-300 hover:scale-105 bg-gradient-to-br from-yellow-50 to-orange-50 border-yellow-200">
+                  <CardContent className="p-6 text-center">
+                    <div className="w-12 h-12 bg-gradient-to-r from-yellow-500 to-orange-600 rounded-xl flex items-center justify-center mx-auto mb-3">
+                      <Badge className="w-6 h-6 text-white" />
+                    </div>
+                    <h3 className="font-bold text-gray-900 mb-2">Community Badges</h3>
+                    <p className="text-sm text-gray-600">Achievement badges from events</p>
+                  </CardContent>
+                </Card>
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* View Toggle */}
         <div className="flex justify-center mb-8">

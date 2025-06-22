@@ -13,6 +13,7 @@
     "@auth/prisma-adapter": "^2.9.1",
     "@googlemaps/react-wrapper": "^1.2.0",
     "@hookform/resolvers": "^3.3.0",
+    "@n8n/chat": "^0.44.0",
     "@prisma/client": "^5.22.0",
     "@radix-ui/react-label": "^2.1.7",
     "@radix-ui/react-slot": "^1.2.3",
